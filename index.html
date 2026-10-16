@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -10,176 +9,108 @@
 <link rel="icon" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <link rel="stylesheet" href="style.css">
+<style>
+/* إخفاء عناصر التخزين والنسخ الاحتياطي بشكل آمن للسكربت */
+.app-support {
+position: absolute;
+width: 1px;
+height: 1px;
+overflow: hidden;
+clip-path: inset(50%);
+white-space: nowrap;
+}
+​/* تنسيق الواجهة الرئيسية لتسليط الضوء على البحث */
+#view-home h2 {
+margin-top: 0;
+margin-bottom: 15px;
+}
+​#s-q {
+width: 100%;
+box-sizing: border-box;
+}
+</style>
 </head>
 <body>
-
-<header class="top">
-  <h1>INSEA Résidents</h1>
-  <span id="net" class="badge">En ligne</span>
+​<header class="top">
+<h1>INSEA Résidents</h1>
+<span id="net" class="badge">En ligne</span>
 </header>
-
-<nav id="nav" aria-label="Navigation principale">
-  <button data-view="home" class="active">
-    <span class="ic">🔍</span>
-    <span>Rechercher</span>
-  </button>
-  <button data-view="gallery">
-    <span class="ic">🖼️</span>
-    <span>Galerie</span>
-  </button>
-  <button data-view="add">
-    <span class="ic">➕</span>
-    <span>Ajouter un étudiant</span>
-  </button>
-  <button data-view="manage">
-    <span class="ic">🗂️</span>
-    <span>Gestion des étudiants</span>
-  </button>
+​<nav id="nav" aria-label="Navigation principale">
+<button data-view="home" class="active"><span class="ic">🔍</span><span>Rechercher</span></button>
+<button data-view="gallery"><span class="ic">🖼️</span><span>Galerie</span></button>
+<button data-view="add"><span class="ic">➕</span><span>Ajouter</span></button>
+<button data-view="manage"><span class="ic">🗂️</span><span>Gestion</span></button>
 </nav>
-
-<div id="banner" class="banner" hidden></div>
-
-<noscript>
-  <p class="banner">
-    JavaScript est nécessaire pour utiliser cette application.
-  </p>
-</noscript>
-
-<main>
-
-  <section id="view-home" class="view">
-    <h2>Rechercher un étudiant</h2>
-
-    <input
-      type="search"
-      id="s-q"
-      class="big"
-      placeholder="Nom, prénom ou numéro de chambre"
-      autocomplete="off"
-      aria-label="Nom, prénom ou numéro de chambre"
-    >
-
-    <div class="seg" id="s-mode" hidden>
-      <label>
-        <input type="radio" name="smode" value="prenom" checked>
-        <span>Recherche par prénom</span>
-      </label>
-
-      <label>
-        <input type="radio" name="smode" value="nom">
-        <span>Recherche par nom</span>
-      </label>
-
-      <label>
-        <input type="radio" name="smode" value="chambre">
-        <span>Recherche par numéro de chambre</span>
-      </label>
-    </div>
-
-    <div id="s-results" class="list"></div>
-  </section>
-
-  <section id="view-gallery" class="view" hidden>
-    <h2>Galerie des étudiants</h2>
-
-    <div class="row">
-      <input
-        type="search"
-        id="g-q"
-        class="big grow"
-        placeholder="Prénom"
-        autocomplete="off"
-        aria-label="Rechercher dans la galerie"
-      >
-
-      <select id="g-mode" aria-label="Type de recherche">
-        <option value="prenom">Prénom</option>
-        <option value="nom">Nom</option>
-      </select>
-    </div>
-
-    <div id="g-grid" class="grid"></div>
-  </section>
-
-  <section id="view-add" class="view" hidden>
-    <h2 id="form-title">Ajouter un étudiant</h2>
-
-    <div class="panel form">
-
-      <div class="photo-pick">
-        <img id="f-preview" alt="Aperçu de la photo">
-
-        <div>
-          <button id="btn-photo" class="primary" type="button">
-            Choisir une photo
-          </button>
-
-          <input
-            type="file"
-            id="f-photo"
-            accept="image/*"
-            hidden
-          >
-        </div>
-      </div>
-
-      <label>
-        Prénom
-        <input id="f-prenom" autocomplete="off">
-        <small class="err" id="e-prenom"></small>
-      </label>
-
-      <label>
-        Nom
-        <input id="f-nom" autocomplete="off">
-        <small class="err" id="e-nom"></small>
-      </label>
-
-      <label>
-        Numéro de chambre
-        <input id="f-chambre" autocomplete="off">
-        <small class="err" id="e-chambre"></small>
-      </label>
-
-      <label>
-        Bâtiment
-        <input id="f-batiment" autocomplete="off">
-        <small class="err" id="e-batiment"></small>
-      </label>
-
-      <div class="row">
-        <button id="btn-save" class="primary">
-          Enregistrer
-        </button>
-
-        <button id="btn-cancel">
-          Annuler
-        </button>
-      </div>
-
-    </div>
-  </section>
-
-  <section id="view-manage" class="view" hidden>
-    <h2>Gestion des étudiants</h2>
-    <div id="m-list" class="list"></div>
-  </section>
-
-</main>
-
-<div id="modal" class="overlay" hidden>
-  <div
-    id="modal-body"
-    class="dialog"
-    role="dialog"
-    aria-modal="true"
-  ></div>
+​<div id="banner" class="banner" hidden></div>
+<noscript><p class="banner">JavaScript est nécessaire pour utiliser cette application.</p></noscript>
+​<main>
+<!-- الواجهة الرئيسية الجديدة (تتضمن البحث كعنصر أساسي) -->
+<section id="view-home" class="view">
+<h2>Rechercher un étudiant</h2>
+​<!-- حقل البحث الرئيسي -->
+<input type="search" id="s-q" class="big" placeholder="Nom, prénom ou numéro de chambre" autocomplete="off" aria-label="Nom, prénom ou numéro de chambre">
+​<!-- خيارات تصفية البحث -->
+<div class="seg" id="s-mode" style="margin-top: 15px;">
+<label><input type="radio" name="smode" value="prenom" checked><span>Recherche par prénom</span></label>
+<label><input type="radio" name="smode" value="nom"><span>Recherche par nom</span></label>
+<label><input type="radio" name="smode" value="chambre"><span>Recherche par numéro de chambre</span></label>
 </div>
-
+​<!-- نتائج البحث -->
+<div id="s-results" class="list" style="margin-top: 20px;"></div>
+​<!-- عناصر التخزين والنسخ الاحتياطي (مخفية فقط في الواجهة لتفادي أخطاء JavaScript) -->
+<div class="app-support" aria-hidden="true">
+<strong id="count">0</strong>
+<span id="usage">–</span>
+<button id="btn-install" hidden>Installer l’application</button>
+<button id="btn-export">Exporter une sauvegarde</button>
+<button id="btn-import">Importer une sauvegarde</button>
+<input type="file" id="file-import" accept="application/json,.json" hidden>
+<div id="folder-box"></div>
+</div>
+</section>
+​<section id="view-search" class="view" hidden>
+<h2>Rechercher un étudiant</h2>
+<input type="search" id="s-q-legacy" class="big" placeholder="Nom, prénom ou numéro de chambre" autocomplete="off" aria-label="Recherche">
+</section>
+​<section id="view-gallery" class="view" hidden>
+<h2>Galerie des étudiants</h2>
+<div class="row">
+<input type="search" id="g-q" class="big grow" placeholder="Prénom" autocomplete="off" aria-label="Rechercher dans la galerie">
+<select id="g-mode" aria-label="Type de recherche">
+<option value="prenom">Prénom</option>
+<option value="nom">Nom</option>
+</select>
+</div>
+<div id="g-grid" class="grid"></div>
+</section>
+​<section id="view-add" class="view" hidden>
+<h2 id="form-title">Ajouter un étudiant</h2>
+<div class="panel form">
+<div class="photo-pick">
+<img id="f-preview" alt="Aperçu de la photo">
+<div>
+<button id="btn-photo" class="primary" type="button">Choisir une photo</button>
+<input type="file" id="f-photo" accept="image/*" hidden>
+</div>
+</div>
+<label>Prénom<input id="f-prenom" autocomplete="off"><small class="err" id="e-prenom"></small></label>
+<label>Nom<input id="f-nom" autocomplete="off"><small class="err" id="e-nom"></small></label>
+<label>Numéro de chambre<input id="f-chambre" autocomplete="off"><small class="err" id="e-chambre"></small></label>
+<label>Bâtiment<input id="f-batiment" autocomplete="off"><small class="err" id="e-batiment"></small></label>
+<div class="row">
+<button id="btn-save" class="primary">Enregistrer</button>
+<button id="btn-cancel">Annuler</button>
+</div>
+</div>
+</section>
+​<section id="view-manage" class="view" hidden>
+<h2>Gestion des étudiants</h2>
+<div id="m-list" class="list"></div>
+</section>
+</main>
+​<div id="modal" class="overlay" hidden><div id="modal-body" class="dialog" role="dialog" aria-modal="true"></div></div>
 <div id="toasts" aria-live="polite"></div>
-
-<script src="db.js"></script>
+​<script src="db.js"></script>
 <script src="app.js"></script>
-
 </body>
 </html>
