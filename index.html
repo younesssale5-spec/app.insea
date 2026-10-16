@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="fr" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>INSEA Résidents</title>
+<style>
+  :root {
+    --primary: #2563eb;
+    --primary-dark: #1d4ed8;
+    --bg: #f8fafc;
+    --card: #ffffff;
+    --text: #0f172a;
+    --text-light: #64748b;
+    --border: #e2e8f0;
+    --danger: #dc2626;
+    --danger-dark: #b91c1c;
+    --warn: #d97706;
+    --ok: #16a34a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+  body { background: var(--bg); color: var(--text); padding-bottom: 70px; }
+  header { background: var(--card); border-bottom: 1px solid var(--border); padding: 1rem; position: sticky; top: 0; z-index: 10; display: flex; justify-content: space-between; align-items: center; }
+  h1 { font-size: 1.25rem; color: var(--primary); }
+  .net-status { font-size: 0.75rem; padding: 0.25rem 0.5rem; border-radius: 999px; background: #dcfce7; color: var(--ok); font-weight: 600; }
+  .net-status.off { background: #fee2e2; color: var(--danger); }
+  main { padding: 1rem; max-width: 600px; margin: 0 auto; }
+  .view { display: none; }
+  .view:not([hidden]) { display: block; }
+  nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card); border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 0.5rem; z-index: 10; }
+  nav button { background: none; border: none; font-size: 0.75rem; color: var(--text-light); display: flex; flex-direction: column; align-items: center; gap: 2px; cursor: pointer; }
+  nav button.active { color: var(--primary); font-weight: bold; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1rem; margin-bottom: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+  .card h3 { margin-bottom: 0.5rem; font-size: 1rem; }
+  p, details { font-size: 0.9rem; color: var(--text-light); margin-bottom: 0.75rem; line-height: 1.4; }
+  .row { display: flex; gap: 0.55rem; margin-top: 0.75rem; flex-wrap: wrap; }
+  button.primary { background: var(--primary); color: white; border: none; padding: 0.5rem 1rem; border-radius: 8px; font-weight: 600; cursor: pointer; }
+  button.primary:hover { background: var(--primary-dark); }
+  button { background: var(--card); color: var(--text); border: 1px solid var(--border); padding: 0.5rem 1rem; border-radius: 8px; font-weight: 600; cursor: pointer; }
+  button.danger { background: var(--danger); color: white; border: none; }
+  button.danger:hover { background: var(--danger-dark); }
+  input, select { width: 100%; padding: 0.6rem; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 0.5rem; font-size: 0.95rem; }
+  .item { display: flex; align-items: center; gap: 1rem; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 0.75rem; margin-bottom: 0.5rem; cursor: pointer; }
+  .item img { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 1px solid var(--border); }
+  .item .meta { flex: 1; }
+  .item .meta b { display: block; font-size: 0.95rem; }
+  .item .meta small { color: var(--text-light); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 0.75rem; }
+  .tile { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 0.5rem; text-align: center; cursor: pointer; }
+  .tile img { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; margin-bottom: 0.25rem; }
+  .tile span { display: block; font-size: 0.85rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 100; padding: 1rem; }
+  #modal[hidden] { display: none; }
+  .modal-content { background: var(--card); padding: 1.5rem; border-radius: 12px; width: 100%; max-width: 450px; max-height: 90vh; overflow-y: auto; }
+  .viewer img.viewer-img { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; display: block; margin: 0 auto 1rem; border: 2px solid var(--primary); }
+  dl { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-bottom: 1rem; font-size: 0.9rem; }
+  dt { color: var(--text-light); }
+  dd { font-weight: 600; text-align: right; }
+  .empty { text-align: center; color: var(--text-light); padding: 2rem; }
+  .toast-container { position: fixed; top: 1rem; right: 1rem; z-index: 1000; display: flex; flex-direction: column; gap: 0.5rem; }
+  .toast { background: var(--text); color: white; padding: 0.75rem 1rem; border-radius: 8px; font-size: 0.85rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); animation: fadeIn 0.3s ease; }
+  .toast.err { background: var(--danger); }
+  .toast.warn { background: var(--warn); }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>INSEA Résidents</h1>
+  <div id="net" class="net-status">En ligne</div>
+</header>
+
+<main>
+  <!-- Home View -->
+  <section id="view-home" class="view">
+    <div class="card">
+      <h3>Statistiques</h3>
+      <p><b><span id="count">0</span></b> étudiants enregistrés</p>
+      <p>Espace utilisé : <b><span id="usage">–</span></b></p>
+    </div>
+    <div class="card" id="folder-box">
+      <h3>Stockage des photos</h3>
+      <p>Chargement des options de stockage...</p>
+    </div>
+    <div class="card">
+      <h3>Sauvegarde des données</h3>
+      <div class="row">
+        <button id="btn-export" class="primary">Exporter une sauvegarde</button>
+        <button id="btn-import">Importer une sauvegarde</button>
+        <input type="file" id="file-import" accept=".json" style="display:none">
+      </div>
+    </div>
+  </section>
+
+  <!-- Search View -->
+  <section id="view-search" class="view" hidden>
+    <div class="card">
+      <h3>Rechercher un étudiant</h3>
+      <div class="row" style="margin-bottom: 0.75rem;">
+        <label><input type="radio" name="smode" value="prenom" checked> Prénom</label>
+        <label><input type="radio" name="smode" value="nom"> Nom</label>
+        <label><input type="radio" name="smode" value="chambre"> Chambre</label>
+      </div>
+      <input type="text" id="s-q" placeholder="Commencez à écrire...">
+    </div>
+    <div id="s-results"></div>
+  </section>
+
+  <!-- Gallery View -->
+  <section id="view-gallery" class="view" hidden>
+    <div class="card">
+      <div class="row" style="margin-top:0">
+        <input type="text" id="g-q" placeholder="Rechercher..." style="margin-bottom:0; flex:1;">
+        <select id="g-mode" style="width: auto; margin-bottom:0;">
+          <option value="prenom">Prénom</option>
+          <option value="nom" selected>Nom</option>
+        </select>
+      </div>
+    </div>
+    <div id="g-grid" class="grid"></div>
+  </section>
+
+  <!-- Add View -->
+  <section id="view-add" class="view" hidden>
+    <div class="card">
+      <h3 id="form-title">Ajouter un étudiant</h3>
+      <div style="text-align: center; margin-bottom: 1rem;">
+        <img id="f-preview" src="" alt="Photo" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 1px solid var(--border); display: block; margin: 0 auto 0.5rem;">
+        <button type="button" id="btn-photo">Choisir une photo</button>
+        <input type="file" id="f-photo" accept="image/*" style="display:none">
+      </div>
+      <label>Prénom</label>
+      <input type="text" id="f-prenom">
+      <small id="e-prenom" style="color:var(--danger)"></small>
+
+      <label>Nom</label>
+      <input type="text" id="f-nom">
+      <small id="e-nom" style="color:var(--danger)"></small>
+
+      <label>Numéro de chambre</label>
+      <input type="text" id="f-chambre">
+      <small id="e-chambre" style="color:var(--danger)"></small>
+
+      <label>Bâtiment</label>
+      <input type="text" id="f-batiment">
+      <small id="e-batiment" style="color:var(--danger)"></small>
+
+      <div class="row" style="margin-top: 1rem;">
+        <button id="btn-save" class="primary" style="flex:1">Enregistrer</button>
+        <button id="btn-cancel" style="flex:1">Annuler</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Manage View -->
+  <section id="view-manage" class="view" hidden>
+    <div class="card">
+      <h3>Gestion des étudiants</h3>
+      <div id="m-list"></div>
+    </div>
+  </section>
+</main>
+
+<!-- Modal Viewer -->
+<div id="modal" hidden>
+  <div class="modal-content" id="modal-body"></div>
+</div>
+
+<div id="toasts" class="toast-container"></div>
+
+<nav id="nav">
+  <button data-view="home" class="active">🏠 <span>Accueil</span></button>
+  <button data-view="search">🔍 <span>Rechercher</span></button>
+  <button data-view="gallery">🖼️ <span>Galerie</span></button>
+  <button data-view="add">➕ <span>Ajouter</span></button>
+  <button data-view="manage">🗂️ <span>Gestion</span></button>
+</nav>
+
+<script>
+/* IndexedDB wrapper */
+const DB = (() => {
+  const NAME = 'insea_residents', VERSION = 1;
+  let opening = null;
+  function open() {
+    if (opening) return opening;
+    opening = new Promise((resolve, reject) => {
+      if (!window.indexedDB) return reject(new Error('indexedDB unavailable'));
+      const req = indexedDB.open(NAME, VERSION);
+      req.onupgradeneeded = () => {
+        const d = req.result;
+        if (!d.objectStoreNames.contains('students')) d.createObjectStore('students', { keyPath: 'id' });
+        if (!d.objectStoreNames.contains('settings')) d.createObjectStore('settings');
+      };
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => { opening = null; reject(req.error); };
+    });
+    return opening;
+  }
+  async function run(store, mode, fn) {
+    const d = await open();
+    return new Promise((resolve, reject) => {
+      const t = d.transaction(store, mode);
+      let result;
+      const rq = fn(t.objectStore(store));
+      if (rq) rq.onsuccess = () => { result = rq.result; };
+      t.oncomplete = () => resolve(result);
+      t.onerror = () => reject(t.error);
+      t.onabort = () => reject(t.error || new Error('transaction aborted'));
+    });
+  }
+  return {
+    open,
+    all: () => run('students', 'readonly', s => s.getAll()),
+    put: rec => run('students', 'readwrite', s => s.put(rec)),
+    del: id => run('students', 'readwrite', s => s.delete(id)),
+    bulkPut: recs => run('students', 'readwrite', s => { recs.forEach(r => s.put(r)); }),
+    replaceAll: recs => run('students', 'readwrite', s => { s.clear(); recs.forEach(r => s.put(r)); }),
+    getSetting: k => run('settings', 'readonly', s => s.get(k)),
+    setSetting: (k, v) => run('settings', 'readwrite', s => s.put(v, k))
+  };
+})();
+
+'use strict';
+const APP_NAME = 'INSEA Résidents';
+const FOLDER_NAME = 'INSEA_Residents';
+const FS_OK = typeof window.showDirectoryPicker === 'function';
+const PLACEHOLDER = 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>');
+
+const $ = (s, r = document) => r.querySelector(s); const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const norm = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase();
+
+let students = [];
+let urls = new Map();
+let dirHandle = null;
+let editing = null;
+let viewer = { list: [], i: 0 };
+let lists = { search: [], gallery: [], manage: [] };
+let currentView = 'home';
+
+function toast(msg, type = 'ok') {
+  const t = document.createElement('div');
+  t.className = 'toast ' + type;
+  t.textContent = msg;
+  $('#toasts').appendChild(t);
+  setTimeout(() => t.remove(), 4500);
+}
+function storageError(e) {
+  console.error(e);
+  if (e && e.name === 'QuotaExceededError') toast('Espace de stockage insuffisant.', 'err');
+  else toast('Erreur de stockage.', 'err');
+}
+function photoSrc(s) {
+  if (!s.photo) return PLACEHOLDER;
+  if (!urls.has(s.id)) urls.set(s.id, URL.createObjectURL(s.photo));
+  return urls.get(s.id);
+}
+function fullName(s) { return s.prenom + ' ' + s.nom; }
+function newId() { return 'e' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+function fileName(s) { return s.id + '.jpg'; }
+function openModal(html) { $('#modal-body').innerHTML = html; $('#modal').hidden = false; }
+function closeModal() { $('#modal').hidden = true; $('#modal-body').innerHTML = ''; }
+function blobToDataURL(b) { return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = () => rej(r.error); r.readAsDataURL(b); }); }
+async function dataURLToBlob(u) { return (await fetch(u)).blob(); }
+function downloadBlob(blob, name) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+}
+
+async function reload() {
+  urls.forEach(u => URL.revokeObjectURL(u)); urls.clear();
+  students = (await DB.all()).sort((a, b) => (norm(a.nom) + norm(a.prenom)).localeCompare(norm(b.nom) + norm(b.prenom)));
+}
+
+async function processPhoto(file) {
+  if (!file.type.startsWith('image/')) throw new Error('type');
+  const bmp = await createImageBitmap(file);
+  const k = Math.min(1, 900 / Math.max(bmp.width, bmp.height));
+  const c = document.createElement('canvas');
+  c.width = Math.round(bmp.width * k); c.height = Math.round(bmp.height * k);
+  c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
+  return new Promise((res, rej) => c.toBlob(b => b ? res(b) : rej(new Error('blob')), 'image/jpeg', 0.85));
+}
+
+async function initFolder() {
+  if (!FS_OK) return;
+  try { dirHandle = (await DB.getSetting('dir')) || null; } catch (e) { dirHandle = null; }
+}
+async function ensurePerm() {
+  if (!dirHandle) return false;
+  const o = { mode: 'readwrite' };
+  if ((await dirHandle.queryPermission(o)) === 'granted') return true;
+  return (await dirHandle.requestPermission(o)) === 'granted';
+}
+async function pickFolder() {
+  try {
+    const parent = await window.showDirectoryPicker({ mode: 'readwrite', id: 'insea', startIn: 'pictures' });
+    dirHandle = parent.name === FOLDER_NAME ? parent : await parent.getDirectoryHandle(FOLDER_NAME, { create: true });
+    await DB.setSetting('dir', dirHandle);
+    toast('Dossier des photos connecté.');
+  } catch (e) {
+    if (e.name !== 'AbortError') toast('Impossible d’accéder au dossier.', 'err');
+  }
+  renderHome();
+}
+async function writePhotoFile(s) {
+  if (!dirHandle || !s.photo) return false;
+  try {
+    if (!(await ensurePerm())) return false;
+    const fh = await dirHandle.getFileHandle(fileName(s), { create: true });
+    const w = await fh.createWritable(); await w.write(s.photo); await w.close();
+    return true;
+  } catch (e) { console.error(e); return false; }
+}
+async function removePhotoFile(s) {
+  try { if (dirHandle && (await ensurePerm())) { await dirHandle.removeEntry(fileName(s)); return true; } } catch (e) { console.error(e); }
+  return false;
+}
+
+function show(name) {
+  currentView = name;
+  $$('.view').forEach(v => v.hidden = v.id !== 'view-' + name);$$
+('#nav button').forEach(b => b.classList.toggle('active', b.dataset.view === name));
+  render();
+  window.scrollTo(0, 0);
+}
+function render() {
+  ({ home: renderHome, search: renderSearch, gallery: renderGallery, manage: renderManage }[currentView] || (() => {}))();
+}
+
+function itemHTML(s, ctx, withActions) {
+  return `<div class="item" data-act="view" data-id="${s.id}" data-ctx="${ctx}">
+    <img src="${photoSrc(s)}" alt="Photo" loading="lazy">
+    <div class="meta"><b>${esc(fullName(s))}</b><small>Chambre ${esc(s.chambre)} · Bâtiment ${esc(s.batiment)}</small></div>
+    ${withActions ? `<button data-act="edit" data-id="${s.id}">Modifier</button><button class="danger" data-act="delete" data-id="${s.id}">Suppr.</button>` : ''}
+  </div>`;
+}
+function filterBy(q, mode) {
+  const n = norm(q);
+  if (!n) return [];
+  return students.filter(s => norm(s[mode]).startsWith(n));
+}
+
+async function renderHome() {
+  $('#count').textContent = students.length;
+  try {
+    const e = await navigator.storage.estimate();
+    $('#usage').textContent = (e.usage / 1048576).toFixed(1) + ' Mo';
+  } catch (e) { $('#usage').textContent = '–'; }
+  const box = $('#folder-box');
+  const diff = `<details><summary>À propos du stockage</summary><p>Les données sont enregistrées en toute sécurité dans l'appareil (IndexedDB).</p></details>`;
+  if (!FS_OK) {
+    box.innerHTML = `<h3>Stockage</h3><p>Mode de stockage interne actif (IndexedDB).</p>${diff}`;
+  } else if (dirHandle) {
+    box.innerHTML = `<h3>Stockage</h3><p>Dossier connecté : <b>${esc(dirHandle.name)}</b></p><div class="row"><button data-act="pick-folder">Changer de dossier</button></div>${diff}`;
+  } else {
+    box.innerHTML = `<h3>Stockage</h3><p>Sélectionnez un dossier pour les photos.</p><button class="primary" data-act="pick-folder">Choisir le dossier</button>${diff}`;
+  }
+}
+
+function renderSearch() {
+  const mode = $('input[name=smode]:checked').value;
+  $('#s-q').placeholder = { prenom: 'Prénom', nom: 'Nom', chambre: 'Numéro de chambre' }[mode];
+  const q = $('#s-q').value;
+  const out = $('#s-results');
+  if (!norm(q)) { lists.search = []; out.innerHTML = `<div class="empty">${students.length ? 'Commencez à écrire pour rechercher.' : 'Aucun étudiant.'}</div>`; return; }
+  lists.search = filterBy(q, mode);
+  out.innerHTML = lists.search.length ? lists.search.map(s => itemHTML(s, 'search', false)).join('') : '<div class="empty">Aucun étudiant trouvé</div>';
+}
+
+function renderGallery() {
+  const q = $('#g-q').value, mode = $('#g-mode').value;
+  lists.gallery = norm(q) ? filterBy(q, mode) : students.slice();
+  $('#g-grid').innerHTML = lists.gallery.length
+    ? lists.gallery.map(s => `<button class="tile" data-act="view" data-id="${s.id}" data-ctx="gallery"><img src="${photoSrc(s)}" loading="lazy"><span>${esc(fullName(s))}</span></button>`).join('')
+    : `<div class="empty" style="grid-column:1/-1">Aucun étudiant trouvé</div>`;
+}
+
+function renderManage() {
+  lists.manage = students.slice();
+  $('#m-list').innerHTML = students.length ? students.map(s => itemHTML(s, 'manage', true)).join('') : '<div class="empty">Aucun étudiant enregistré.</div>';
+}
+
+function openViewer(ctx, id) {
+  viewer.list = lists[ctx].length ? lists[ctx] : students;
+  viewer.i = Math.max(0, viewer.list.findIndex(s => s.id === id));
+  renderViewer();
+}
+function renderViewer() {
+  const s = viewer.list[viewer.i];
+  if (!s) return closeModal();
+  const multi = viewer.list.length > 1;
+  openModal(`<div class="viewer">
+    <img class="viewer-img" src="${photoSrc(s)}" alt="Photo">
+    <h3>Informations</h3>
+    <dl><dt>Prénom</dt><dd>${esc(s.prenom)}</dd><dt>Nom</dt><dd>${esc(s.nom)}</dd><dt>Chambre</dt><dd>${esc(s.chambre)}</dd><dt>Bâtiment</dt><dd>${esc(s.batiment)}</dd></dl>
+    <div class="row"><button data-act="prev" ${multi ? '' : 'disabled'}>‹ Précédent</button><span>${viewer.i + 1} / ${viewer.list.length}</span><button data-act="next" ${multi ? '' : 'disabled'}>Suivant ›</button></div>
+    <div class="row"><button data-act="edit" data-id="${s.id}">Modifier</button><button class="danger" data-act="delete" data-id="${s.id}">Supprimer</button></div>
+    <div class="row" style="margin-top:1rem;"><button data-act="close" style="width:100%">Fermer</button></div>
+  </div>`);
+}
+function step(d) { if (viewer.list.length > 1) { viewer.i = (viewer.i + d + viewer.list.length) % viewer.list.length; renderViewer(); } }
+
+function startForm(s) {
+  editing = { id: s ? s.id : newId(), photo: s ? s.photo : null, changed: false, existing: s || null };
+  $('#form-title').textContent = s ? 'Modifier les informations' : 'Ajouter un étudiant';
+  ['prenom', 'nom', 'chambre', 'batiment'].forEach(k => { $('#f-' + k).value = s ? s[k] : ''; $('#e-' + k).textContent = ''; });
+  $('#f-preview').src = s ? photoSrc(s) : PLACEHOLDER;
+  $('#f-photo').value = '';
+}
+async function onPhotoChosen(file) {
+  if (!file) return;
+  try {
+    editing.photo = await processPhoto(file);
+    editing.changed = true;
+    $('#f-preview').src = URL.createObjectURL(editing.photo);
+  } catch (e) { toast('Image invalide.', 'err'); }
+}
+async function saveForm() {
+  const rec = { id: editing.id, photo: editing.photo || null };
+  let valid = true;
+  ['prenom', 'nom', 'chambre', 'batiment'].forEach(k => {
+    rec[k] = $('#f-' + k).value.trim().replace(/\s+/g, ' ');
+    $('#e-' + k).textContent = rec[k] ? '' : 'Obligatoire';
+    if (!rec[k]) valid = false;
+  });
+  if (!valid) return toast('Veuillez remplir tous les champs.', 'err');
+  rec.updatedAt = Date.now();
+  if (dirHandle && rec.photo) await writePhotoFile(rec);
+  try { await DB.put(rec); } catch (e) { return storageError(e); }
+  await reload();
+  toast('Enregistré avec succès');
+  editing = null;
+  show('manage');
+}
+
+function askDelete(id) {
+  const s = students.find(x => x.id === id); if (!s) return;
+  openModal(`<h3>Confirmation</h3><p>Voulez-vous supprimer <b>${esc(fullName(s))}</b> ?</p><div class="row"><button data-act="close">Annuler</button><button class="danger" data-act="confirm-delete" data-id="${id}">Confirmer</button></div>`);
+}
+async function doDelete(id) {
+  const s = students.find(x => x.id === id); if (!s) return;
+  try { await DB.del(id); } catch (e) { return storageError(e); }
+  closeModal(); await reload(); render();
+  toast('Étudiant supprimé.');
+}
+
+async function exportBackup() {
+  try {
+    const out = [];
+    for (const s of students) out.push({ id: s.id, prenom: s.prenom, nom: s.nom, chambre: s.chambre, batiment: s.batiment, photo: s.photo ? await blobToDataURL(s.photo) : null });
+    const blob = new Blob([JSON.stringify({ app: APP_NAME, version: 1, students: out })], { type: 'application/json' });
+    downloadBlob(blob, 'insea-residents-backup.json');
+    toast('Sauvegarde exportée.');
+  } catch (e) { toast('Échec de l’exportation.', 'err'); }
+}
+async function onImportFile(file) {
+  if (!file) return;
+  try {
+    const data = JSON.parse(await file.text());
+    const recs = [];
+    for (const s of data.students) recs.push({ id: s.id, prenom: s.prenom, nom: s.nom, chambre: s.chambre, batiment: s.batiment, photo: s.photo ? await dataURLToBlob(s.photo) : null });
+    await DB.replaceAll(recs);
+    await reload(); render();
+    toast('Sauvegarde importée avec succès.');
+  } catch (e) { toast('Fichier invalide.', 'err'); }
+  $('#file-import').value = '';
+}
+
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-act]'); if (!t) return;
+  const id = t.dataset.id;
+  switch (t.dataset.act) {
+    case 'view': openViewer(t.dataset.ctx, id); break;
+    case 'close': closeModal(); break;
+    case 'prev': step(-1); break;
+    case 'next': step(1); break;
+    case 'edit': e.stopPropagation(); closeModal(); startForm(students.find(s => s.id === id)); show('add'); break;
+    case 'delete': e.stopPropagation(); askDelete(id); break;
+    case 'confirm-delete': doDelete(id); break;
+    case 'pick-folder': pickFolder(); break;
+  }
+});
+
+$('#nav').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.view === 'add') startForm(null);
+  show(b.dataset.view);
+});
+
+$('#modal').addEventListener('click', e => { if (e.target.id === 'modal') closeModal(); });
+$('#s-q').addEventListener('input', renderSearch); $$('input[name=smode]').forEach(r => r.addEventListener('change', renderSearch));$('#g-q').addEventListener('input', renderGallery);
+$('#g-mode').addEventListener('change', renderGallery);
+$('#btn-photo').addEventListener('click', () => $('#f-photo').click());
+$('#f-photo').addEventListener('change', e => onPhotoChosen(e.target.files[0]));
+$('#btn-save').addEventListener('click', saveForm);
+$('#btn-cancel').addEventListener('click', () => { editing = null; show('manage'); });
+$('#btn-export').addEventListener('click', exportBackup);
+$('#btn-import').addEventListener('click', () => $('#file-import').click());
+$('#file-import').addEventListener('change', e => onImportFile(e.target.files[0]));
+
+function updateNet() { const n = $('#net'); n.textContent = navigator.onLine ? 'En ligne' : 'Hors ligne'; n.classList.toggle('off', !navigator.onLine); }
+window.addEventListener('online', updateNet); window.addEventListener('offline', updateNet);
+
+(async function init() {
+  updateNet();
+  try { await DB.open(); await reload(); } catch (e) { console.error(e); }
+  await initFolder();
+  startForm(null);
+  show('home');
+})();
+</script>
+</body>
+</html>
